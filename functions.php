@@ -313,6 +313,29 @@ function readcontents($urltoread){
     return $filecntns;
 }
 
+
+function run_hackertarget_scan($endpoint, $target){
+  $url = "https://api.hackertarget.com/" . $endpoint . "/?q=" . urlencode($target);
+  $result = readcontents($url);
+  if ($result === false || $result === null || trim($result) === "") {
+    return "[!] Scan failed or empty response.";
+  }
+  if (stripos($result, "error") !== false || stripos($result, "API count exceeded") !== false) {
+    return "[!] " . trim($result);
+  }
+  return trim($result);
+}
+
+function print_scan_lines($prefix, $text){
+  global $bold, $lblue, $green;
+  $lines = explode("
+", trim($text));
+  foreach ($lines as $line){
+    if (trim($line) === "") { continue; }
+    echo $bold . $lblue . "
+[" . $prefix . "] " . $green . $line;
+  }
+}
 function MXlookup ($site){
   $Mxlkp = dns_get_record($site, DNS_MX);
 	$mxrcrd = $Mxlkp[0]['target'];

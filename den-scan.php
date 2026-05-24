@@ -102,7 +102,7 @@ scanlist:
 
             $lblue Scanning Site : " . $fgreen . $ipsl . $ip . $blue . "
       \n\n";
-    echo $yellow . " [0]  Основной Разведка$white (Название сайта, IP-адрес, CMS, Cloudflare Detection, Robots.txt Scanner)$yellow \n [1]  Whois Lookup \n [2]  Поиск Geo-IP \n [3]  Захватить баннеры \n [4]  DNS Lookup \n [5]  Калькулятор подсети \n [6] Сканирование портов NMAP \n [7] Субдомен Сканер \n [8] Обратный IP-поиск и обнаружение CMS \n [9]  SQLi Scanner$white (Находит ссылки с параметром и сканирует на основе ошибок SQLi)$yellow \n [10]Блоггеры Посмотреть$white (Информация, которая Блоггеры могут быть заинтересованы)$yellow \n [11] WordPress Scan$white (Только если целевой сайт работает на WP)$yellow \n [12] Crawler \n [13] MX Lookup \n$magenta [A] Scan For Everything - (Старый хромой сканер) \n$blue [F]  Исправить (проверяет наличие необходимых модулей и устанавливает недостающие) \n$fgreen [U]  Проверить наличие обновлений \n$white [B]  Сканировать другой сайт (Назад к выбору сайта) \n$red [Q]  Выход! \n\n" . $cln;
+    echo $yellow . " [0]  Основной Разведка$white (Название сайта, IP-адрес, CMS, Cloudflare Detection, Robots.txt Scanner)$yellow \n [1]  Whois Lookup \n [2]  Поиск Geo-IP \n [3]  Захватить баннеры \n [4]  DNS Lookup \n [5]  Калькулятор подсети \n [6] Сканирование портов NMAP \n [7] Субдомен Сканер \n [8] Обратный IP-поиск и обнаружение CMS \n [9]  SQLi Scanner$white (Находит ссылки с параметром и сканирует на основе ошибок SQLi)$yellow \n [10]Блоггеры Посмотреть$white (Информация, которая Блоггеры могут быть заинтересованы)$yellow \n [11] WordPress Scan$white (Только если целевой сайт работает на WP)$yellow \n [12] Crawler \n [13] MX Lookup \n [14] TCP Port Scan (быстрый)\n [15] Traceroute \n [16] HTTP Security Headers \n$magenta [A] Scan For Everything - (Старый хромой сканер) \n$blue [F]  Исправить (проверяет наличие необходимых модулей и устанавливает недостающие) \n$fgreen [U]  Проверить наличие обновлений \n$white [B]  Сканировать другой сайт (Назад к выбору сайта) \n$red [Q]  Выход! \n\n" . $cln;
 askscan:
     userinput("Выберите любое сканирование или действие из списка выше");
     $scan = trim(fgets(STDIN, 1024));
@@ -122,6 +122,9 @@ askscan:
         '11',
         '12',
         '13',
+        '14',
+        '15',
+        '16',
         'F',
         'f',
         'A',
@@ -139,11 +142,7 @@ askscan:
       }
     else
       {
-        if ($scan == "15")
-          {
-            goto thephuckinstart;
-          }
-        elseif ($scan == 'q' | $scan == 'Q')
+        if ($scan == 'q' | $scan == 'Q')
           {
             echo "\n\n\t До свидания, хорошего дня :)\n\n";
             die();
@@ -306,11 +305,90 @@ askscan:
             echo $blue . $bold . "[i] Сканирование сайта:\e[92m $ipsl" . "$ip \n";
             echo $bold . $yellow . "[S] Тип сканирования : Nmap Port Scan" . $cln;
             echo $bold . $lblue . "\n[~] Результат сканирования порта: \n\n" . $cln;
-            $urlnmap    = "http://api.hackertarget.com/nmap/?q=" . $lwwww;
-            $resultnmap = readcontents($urlnmap);
+             $resultnmap = run_hackertarget_scan("nmap", $lwwww);
             echo $bold . $fgreen . $resultnmap;
             echo "\n\n";
             echo $bold . $yellow . "[*] Сканирование завершено. Нажмите Enter, чтобы продолжить ИЛИ CTRL + C, чтобы остановить\n\n";
+            trim(fgets(STDIN, 1024));
+            goto scanlist;
+          }
+
+        elseif ($scan == "14")
+          {
+            $lwwww    = str_replace("www.", "", $ip);
+            echo "
+$cln" . $lblue . $bold . "[+] Сканирование начинается ... 
+";
+            echo $blue . $bold . "[i] Сканирование сайта:\e[92m $ipsl" . "$ip 
+";
+            echo $bold . $yellow . "[S] Тип сканирования : TCP Port Scan (Quick)" . $cln;
+            echo $bold . $lblue . "
+[~] Результат TCP сканирования: 
+
+" . $cln;
+            $resulttcp = run_hackertarget_scan("tcpportscan", $lwwww);
+            print_scan_lines("TCP", $resulttcp);
+            echo "
+
+";
+            echo $bold . $yellow . "[*] Сканирование завершено. Нажмите Enter, чтобы продолжить ИЛИ CTRL + C, чтобы остановить
+
+";
+            trim(fgets(STDIN, 1024));
+            goto scanlist;
+          }
+        elseif ($scan == "15")
+          {
+            $lwwww    = str_replace("www.", "", $ip);
+            echo "
+$cln" . $lblue . $bold . "[+] Сканирование начинается ... 
+";
+            echo $blue . $bold . "[i] Сканирование сайта:\e[92m $ipsl" . "$ip 
+";
+            echo $bold . $yellow . "[S] Тип сканирования : Traceroute" . $cln;
+            echo $bold . $lblue . "
+[~] Результат трассировки: 
+
+" . $cln;
+            $resulttrace = run_hackertarget_scan("mtr", $lwwww);
+            print_scan_lines("MTR", $resulttrace);
+            echo "
+
+";
+            echo $bold . $yellow . "[*] Сканирование завершено. Нажмите Enter, чтобы продолжить ИЛИ CTRL + C, чтобы остановить
+
+";
+            trim(fgets(STDIN, 1024));
+            goto scanlist;
+          }
+        elseif ($scan == "16")
+          {
+            $lwwww    = str_replace("www.", "", $ip);
+            echo "
+$cln" . $lblue . $bold . "[+] Сканирование начинается ... 
+";
+            echo $blue . $bold . "[i] Сканирование сайта:\e[92m $ipsl" . "$ip 
+";
+            echo $bold . $yellow . "[S] Тип сканирования : HTTP Security Headers" . $cln;
+            echo "
+";
+            $headers = get_headers($ipsl . $ip, 1);
+            $securityHeaders = array('Strict-Transport-Security','Content-Security-Policy','X-Frame-Options','X-Content-Type-Options','Referrer-Policy','Permissions-Policy');
+            foreach ($securityHeaders as $sh) {
+              if (isset($headers[$sh])) {
+                $val = is_array($headers[$sh]) ? implode('; ', $headers[$sh]) : $headers[$sh];
+                echo $bold . $lblue . "[SEC] " . $green . $sh . ": " . $val . "
+";
+              } else {
+                echo $bold . $lblue . "[SEC] " . $red . $sh . ": отсутствует
+";
+              }
+            }
+            echo "
+";
+            echo $bold . $yellow . "[*] Сканирование завершено. Нажмите Enter, чтобы продолжить ИЛИ CTRL + C, чтобы остановить
+
+";
             trim(fgets(STDIN, 1024));
             goto scanlist;
           }
